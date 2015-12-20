@@ -1,7 +1,5 @@
-# ya-lifx
-> 💡Yet Another LIFX JS client
-
-REST client for the [Lifx's API](http://api.developer.lifx.com/); each method of ``ya-lifx`` return a promise which resolve with the API's response; 
+# :bulb: ya-lifx
+> REST client for the [Lifx's API](http://api.developer.lifx.com/); each method of ``ya-lifx`` return a promise which resolve with the API's response; 
 
 #### Installing
 use ``npm`` to install the lib on you proyect;
