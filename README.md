@@ -1,7 +1,7 @@
 # :bulb: ya-lifx
 > REST client for the [Lifx's API](http://api.developer.lifx.com/); each method of ``ya-lifx`` return a promise which resolve with the API's response; 
 
-[![Dev dependencies status](https://david-dm.org/mdottavio/ya-lifx.svg)](https://david-dm.org/mdottavio/ya-lifx#info=devDependencies)
+[![Dev dependencies status](https://david-dm.org/mdottavio/ya-lifx.svg)](https://david-dm.org/mdottavio/ya-lifx#info=dependencies&view=table)
 
 
 #### Installing
