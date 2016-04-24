@@ -3,34 +3,69 @@
 let requestHdlr = require('./src/requestHandler');
 let endpoints = require('./src/endpoints');
 
-let lifxAPI = function(){
+let lifxAPI = function() {
 
-  let _init = function(aToken){
+  let _init = function(aToken) {
 
     requestHdlr.setToken(aToken);
   };
 
+  let _validateState = function(aState) {
+    let validState = {};
 
-  let _validateState = function(aState){
-    aState = aState || {};
+    if (aState.power === 'on' || aState.power === 'off') {
+      validState.power = aState.power;
+    }
 
-    aState.power = aState.power || '';
-    aState.color = aState.color || '';
-    aState.brightness = aState.brightness || '';
-    aState.duration = aState.duration || '1.0';
-    return aState;
+    if (typeof aState.color === 'string' && aState.color !== '') {
+      validState.color = aState.color;
+    }
+
+    if (typeof aState.brightness === 'number' &&
+      (aState.brightness > 0 && aState.brightness < 1)) {
+      validState.brightness = aState.brightness;
+    }
+
+    if (typeof aState.duration === 'number' &&
+      (aState.duration > 1 && aState.duration < 3155760000.0)) {
+      validState.duration = aState.duration;
+    }
+
+    return validState;
   };
 
-  let _validateEffectParams = function(params){
-    params = params || {};
+  let _validateEffectParams = function(params) {
+    let validParams = {};
 
-    params.color = params.color || '';
-    params.from_color = params.from_color || '';
-    params.period = params.period || '1.0';
-    params.cycles = params.cycles || '1.0';
-    params.persist = params.persist || false;
-    params.power_on = params.power_on || true;
-    params.peak = params.peak || '0.5';
+    if (typeof params.color === 'string' && params.color !== '') {
+      validParams.color = params.color;
+    }
+
+    if (typeof params.from_color === 'string' && params.from_color !== '') {
+      validParams.from_color = params.from_color;
+    }
+
+    if (typeof params.period === 'number') {
+      validParams.period = params.period;
+    }
+
+    if (typeof params.cycles === 'number') {
+      validParams.cycles = params.cycles;
+    }
+
+    if (typeof params.persist === 'boolean') {
+      validParams.persist = params.persist;
+    }
+
+    if (typeof params.power_on === 'boolean') {
+      validParams.power_on = params.power_on;
+    }
+
+    if (typeof params.peak === 'number' &&
+      (params.peak > 0 && params.peak < 1)) {
+      validParams.peak = params.peak;
+    }
+
     return params;
   };
 
@@ -42,11 +77,11 @@ let lifxAPI = function(){
    *                           all by default
    * @return {Object}
    */
-  let _listLights = function(aSelector){
+  let _listLights = function(aSelector) {
 
     aSelector = aSelector || 'all';
 
-    return requestHdlr.get(endpoints.get.lights({ selector : aSelector }));
+    return requestHdlr.get(endpoints.get.lights({ selector: aSelector }));
   };
 
   /**
@@ -55,7 +90,7 @@ let lifxAPI = function(){
    * Doc: http://api.developer.lifx.com/docs/list-scenes
    * @return {Object}
    */
-  let _listScenes = function(){
+  let _listScenes = function() {
 
     return requestHdlr.get(endpoints.get.scenes());
   };
@@ -68,11 +103,10 @@ let lifxAPI = function(){
    * @param  {String} aColor Color string you'd like to validate
    * @return {Object}
    */
-  let _validateColor = function(aColor){
+  let _validateColor = function(aColor) {
 
     return requestHdlr.get(endpoints.get.color({color: aColor}));
   };
-
 
   /**
    * Sets the state of the lights within the selector.
@@ -88,7 +122,7 @@ let lifxAPI = function(){
    *                                Range: 0.0 – 3155760000.0 (100 years)
    * @return {Object}
    */
-  let _setState = function(aSelector, aState){
+  let _setState = function(aSelector, aState) {
     aSelector = aSelector || 'all';
 
     aState = _validateState(aState);
@@ -104,7 +138,7 @@ let lifxAPI = function(){
    * @param  {Double} theDuration The time in seconds to spend performing the scene transition.
    * @return {Object}
    */
-  let _activateScene = function(aScene, theDuration){
+  let _activateScene = function(aScene, theDuration) {
 
     return requestHdlr.put(endpoints.put.scenes({sceneId: aScene}), {duration: theDuration});
   };
@@ -117,7 +151,7 @@ let lifxAPI = function(){
    * @param  {Double} theDuration The time is seconds to spend perfoming the power toggle.
    * @return {Object}
    */
-  let _toggle = function(aSelector, theDuration){
+  let _toggle = function(aSelector, theDuration) {
     aSelector = aSelector || 'all';
 
     return requestHdlr.post(endpoints.post.lights({selector: aSelector}), {duration: theDuration});
@@ -139,7 +173,7 @@ let lifxAPI = function(){
    *  @property {String} peak       Defines where in a period the target color is at its maximum.
    * @return {Object}
    */
-  let _breathe = function(aSelector, params){
+  let _breathe = function(aSelector, params) {
     aSelector = aSelector || 'all';
 
     params = _validateEffectParams(params);
@@ -163,7 +197,7 @@ let lifxAPI = function(){
    *  @property {String} peak       Defines where in a period the target color is at its maximum.
    * @return {Object}
    */
-  let _pulse = function(aSelector, params){
+  let _pulse = function(aSelector, params) {
     aSelector = aSelector || 'all';
 
     params = _validateEffectParams(params);
@@ -182,7 +216,7 @@ let lifxAPI = function(){
    *                               Can be forward or backward
    * @return {Object}
    */
-  let _cycle = function(aSelector, theStates, theDafaults, theDirection){
+  let _cycle = function(aSelector, theStates, theDafaults, theDirection) {
     theStates = Array.isArray(theStates) ? theStates : [];
 
     return requestHdlr.post(endpoints.post.lights.cycle({selector: aSelector}), {
@@ -193,7 +227,7 @@ let lifxAPI = function(){
   };
 
   return {
-    init : _init,
+    init: _init,
     listLights: _listLights,
     listScenes: _listScenes,
     validateColor: _validateColor,
@@ -203,7 +237,6 @@ let lifxAPI = function(){
     breathe: _breathe,
     pulse: _pulse,
     cycle: _cycle
-
   };
 };
 
