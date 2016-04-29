@@ -1,6 +1,6 @@
 'use strict';
 
-var request = require('request');
+var needle = require('needle');
 var Q = require('q');
 
 let requestHandler = function() {
@@ -17,30 +17,27 @@ let requestHandler = function() {
    * @param  {Object} data
    * @return {Object} Q promise
    */
-  let doRequest = function(endopoint, method, data) {
+  let doRequest = (endopoint, method, data) => {
     data = data || {};
 
     var deferred = Q.defer();
     var options = {
-      uri: baseUrl + endopoint,
+      json: true,
       headers: {
         'Content-Type': 'application/json',
-        Accept: 'application/json',
         Authorization: 'Bearer ' + token,
-      },
-      method: method,
-      form: data
+      }
     };
-    request(options, function(err, res, body) {
-      body = JSON.parse(body);
+
+    needle.request(method, baseUrl + endopoint, data, options, (err, res) => {
       if (err) {
         deferred.reject(err);
       } else if (res.statusCode < 400) {
-        deferred.resolve(body);
+        deferred.resolve(res.body);
       } else {
         deferred.reject({
-          error: body.error,
-          warnings: body.warnings || {}
+          error: res.body.error,
+          warnings: res.body.warnings || {}
         });
       }
     });
@@ -54,19 +51,19 @@ let requestHandler = function() {
    * Generate valid tokens on https://cloud.lifx.com/settings
    * @param {String} aToken
    */
-  let _setToken = function(aToken) {
+  let _setToken = (aToken) => {
     token = aToken;
   };
 
-  let _doGet = function(endopoint) {
+  let _doGet = (endopoint) => {
     return doRequest(endopoint, 'GET');
   };
 
-  let _doPost = function(endopoint, data) {
+  let _doPost = (endopoint, data) => {
     return doRequest(endopoint, 'POST', data);
   };
 
-  let _doPut = function(endopoint, data) {
+  let _doPut = (endopoint, data) => {
     return doRequest(endopoint, 'PUT', data);
   };
 
