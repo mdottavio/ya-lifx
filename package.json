@@ -17,8 +17,6 @@
   "author": "dottavio@gmail.com",
   "license": "MIT",
   "dependencies": {
-    "jasmine-expect": "^2.0.2",
-    "q": "^1.4.1",
     "request": "^2.72.0"
   },
   "repository": {
@@ -26,6 +24,7 @@
     "url": "https://github.com/mdottavio/ya-lifx.git"
   },
   "devDependencies": {
+    "jasmine-expect": "^2.0.2",
     "jest-cli": "^11.0.2"
   },
   "jest": {

@@ -81,7 +81,7 @@ let lifxAPI = function() {
 
     aSelector = aSelector || 'all';
 
-    return requestHdlr.get(endpoints.get.lights({ selector: aSelector }));
+    return requestHdlr.get(endpoints.get.lights({ selector: aSelector }));
   };
 
   /**
