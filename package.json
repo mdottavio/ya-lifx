@@ -1,6 +1,6 @@
 {
   "name": "ya-lifx",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Yet Another LIFX JS client",
   "main": "ya-lifx.js",
   "scripts": {
