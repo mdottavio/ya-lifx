@@ -15,5 +15,12 @@
   "predef": [
   ],
   "globals" : {
+    "jest": true,
+    "describe": true,
+    "beforeEach": true,
+    "it": true,
+    "pit": true,
+    "expect": true,
+    "jasmine": true
   }
 }

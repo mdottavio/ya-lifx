@@ -10,7 +10,7 @@ let lifxAPI = function() {
     requestHdlr.setToken(aToken);
   };
 
-  let _validateState = function(aState) {
+  let validateState = function(aState) {
     let validState = {};
 
     if (aState.power === 'on' || aState.power === 'off') {
@@ -34,7 +34,7 @@ let lifxAPI = function() {
     return validState;
   };
 
-  let _validateEffectParams = function(params) {
+  let validateEffectParams = function(params) {
     let validParams = {};
 
     if (typeof params.color === 'string' && params.color !== '') {
@@ -81,7 +81,7 @@ let lifxAPI = function() {
 
     aSelector = aSelector || 'all';
 
-    return requestHdlr.get(endpoints.get.lights({ selector: aSelector }));
+    return requestHdlr.get(endpoints.get.lights({ selector: aSelector }));
   };
 
   /**
@@ -125,7 +125,7 @@ let lifxAPI = function() {
   let _setState = function(aSelector, aState) {
     aSelector = aSelector || 'all';
 
-    aState = _validateState(aState);
+    aState = validateState(aState);
 
     return requestHdlr.put(endpoints.put.lights({selector: aSelector}), aState);
   };
@@ -154,7 +154,7 @@ let lifxAPI = function() {
   let _toggle = function(aSelector, theDuration) {
     aSelector = aSelector || 'all';
 
-    return requestHdlr.post(endpoints.post.lights({selector: aSelector}), {duration: theDuration});
+    return requestHdlr.post(endpoints.post.lights.toggle({selector: aSelector}), {duration: theDuration});
   };
 
   /**
@@ -176,7 +176,7 @@ let lifxAPI = function() {
   let _breathe = function(aSelector, params) {
     aSelector = aSelector || 'all';
 
-    params = _validateEffectParams(params);
+    params = validateEffectParams(params);
 
     return requestHdlr.post(endpoints.post.lights.effects.breathe({selector: aSelector}), params);
   };
@@ -200,7 +200,7 @@ let lifxAPI = function() {
   let _pulse = function(aSelector, params) {
     aSelector = aSelector || 'all';
 
-    params = _validateEffectParams(params);
+    params = validateEffectParams(params);
 
     return requestHdlr.post(endpoints.post.lights.effects.pulse({selector: aSelector}), params);
   };
