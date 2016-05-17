@@ -4,19 +4,36 @@
   "description": "Yet Another LIFX JS client",
   "main": "ya-lifx.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "jest",
+    "coverage": "npm test; open ./coverage/lcov-report/index.html"
   },
   "keywords": [
-    "lifx", "led", "bulb", "lightbulb", "api"
+    "lifx",
+    "led",
+    "bulb",
+    "lightbulb",
+    "api"
   ],
   "author": "dottavio@gmail.com",
   "license": "MIT",
   "dependencies": {
-    "request": "^2.67.0",
-    "q": "^1.4.1"
+    "jasmine-expect": "^2.0.2",
+    "q": "^1.4.1",
+    "request": "^2.72.0"
   },
   "repository": {
     "type": "git",
     "url": "https://github.com/mdottavio/ya-lifx.git"
+  },
+  "devDependencies": {
+    "jest-cli": "^11.0.2"
+  },
+  "jest": {
+    "collectCoverage": true,
+    "testFileExtensions": ["js"],
+    "moduleFileExtensions": ["js"],
+    "unmockedModulePathPatterns": [
+      "<rootDir>/node_modules/"
+    ]
   }
 }
