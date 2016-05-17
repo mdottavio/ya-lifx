@@ -1,7 +1,6 @@
 'use strict';
 
 var request = require('request');
-var Q = require('q');
 
 let requestHandler = function() {
 
@@ -12,40 +11,40 @@ let requestHandler = function() {
   /**
    * Perform a request, return a promise
    *
-   * @param  {String} endopoint
+   * @param  {String} endpoint
    * @param  {String} method
    * @param  {Object} data
-   * @return {Object} Q promise
+   * @return {Object} Promise
    */
-  let doRequest = function(endopoint, method, data) {
-    data = data || {};
+  let doRequest = (endpoint, method, data) => {
 
-    var deferred = Q.defer();
-    var options = {
-      uri: baseUrl + endopoint,
-      headers: {
-        'Content-Type': 'application/json',
-        Accept: 'application/json',
-        Authorization: 'Bearer ' + token,
-      },
-      method: method,
-      form: data
-    };
-    request(options, function(err, res, body) {
-      body = JSON.parse(body);
-      if (err) {
-        deferred.reject(err);
-      } else if (res.statusCode < 400) {
-        deferred.resolve(body);
-      } else {
-        deferred.reject({
-          error: body.error,
-          warnings: body.warnings || {}
-        });
-      }
+    return new Promise((resolve, reject) => {
+      data = data || {};
+      var options = {
+        uri: baseUrl + endpoint,
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+          Authorization: 'Bearer ' + token,
+        },
+        method: method,
+        form: data
+      };
+
+      request(options, function(err, res, body) {
+        body = JSON.parse(body);
+        if (err) {
+          reject(err);
+        } else if (res.statusCode < 400) {
+          resolve(body);
+        } else {
+          reject({
+            error: body.error,
+            warnings: body.warnings || {}
+          });
+        }
+      });
     });
-
-    return deferred.promise;
   };
 
   /**
@@ -58,16 +57,16 @@ let requestHandler = function() {
     token = aToken;
   };
 
-  let _doGet = function(endopoint) {
-    return doRequest(endopoint, 'GET');
+  let _doGet = function(endpoint) {
+    return doRequest(endpoint, 'GET');
   };
 
-  let _doPost = function(endopoint, data) {
-    return doRequest(endopoint, 'POST', data);
+  let _doPost = function(endpoint, data) {
+    return doRequest(endpoint, 'POST', data);
   };
 
-  let _doPut = function(endopoint, data) {
-    return doRequest(endopoint, 'PUT', data);
+  let _doPut = function(endpoint, data) {
+    return doRequest(endpoint, 'PUT', data);
   };
 
   return {
