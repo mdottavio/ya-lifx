@@ -8,6 +8,12 @@ let requestHandler = function() {
 
   let baseUrl = 'https://api.lifx.com/v1/';
 
+  let apiRateLimit = null;
+
+  let validateApiRateLimit = () => {
+    return (apiRateLimit == null) || (apiRateLimit.remaining > 0);
+  };
+
   /**
    * Perform a request, return a promise
    *
@@ -31,30 +37,45 @@ let requestHandler = function() {
         form: data
       };
 
-      request(options, function(err, res, body) {
-        body = JSON.parse(body);
-        if (err) {
-          reject(err);
-        } else if (res.statusCode < 400) {
-          resolve(body);
-        } else {
-          reject({
-            error: body.error,
-            warnings: body.warnings || {}
-          });
-        }
-      });
+      if (validateApiRateLimit()) {
+        request(options, function(err, res, body) {
+          body = JSON.parse(body);
+          // update the apiRateLimit object
+          apiRateLimit = {
+            limit: parseInt(res.headers['x-ratelimit-limit']) || 0,
+            remaining: parseInt(res.headers['x-ratelimit-remaining']) || 0,
+            reset: parseInt(res.headers['x-ratelimit-reset']) || 0
+          };
+
+          if (err) {
+            reject(err);
+          } else if (res.statusCode < 400) {
+            resolve(body);
+          } else {
+            reject({
+              error: body.error,
+              warnings: body.warnings || {}
+            });
+          }
+        });
+      } else {
+        reject({
+          error: 'User request limit reached',
+          warnings: {}
+        });
+      }
     });
   };
 
   /**
-   * Set the lifx token
+   * Set the lifx token and reset the API limits
    *
    * Generate valid tokens on https://cloud.lifx.com/settings
    * @param {String} aToken
    */
   let _setToken = function(aToken) {
     token = aToken;
+    apiRateLimit = null;
   };
 
   let _doGet = function(endpoint) {
@@ -73,7 +94,8 @@ let requestHandler = function() {
     setToken: _setToken,
     get: _doGet,
     post: _doPost,
-    put: _doPut
+    put: _doPut,
+    getLimits: () => apiRateLimit
   };
 };
 module.exports = requestHandler();

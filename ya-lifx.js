@@ -236,7 +236,8 @@ let lifxAPI = function() {
     toggle: _toggle,
     breathe: _breathe,
     pulse: _pulse,
-    cycle: _cycle
+    cycle: _cycle,
+    apiLimits: requestHdlr.getLimits
   };
 };
 
