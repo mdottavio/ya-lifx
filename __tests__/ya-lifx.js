@@ -26,6 +26,7 @@ describe('ya-lifx', () => {
     expect(yaLifx.breathe).toEqual(jasmine.any(Function));
     expect(yaLifx.pulse).toEqual(jasmine.any(Function));
     expect(yaLifx.cycle).toEqual(jasmine.any(Function));
+    expect(yaLifx.apiLimits).toEqual(jasmine.any(Function));
   });
 
   it('should call the GET method when list the lights', () => {
@@ -125,5 +126,12 @@ describe('ya-lifx', () => {
     );
 
     expect(requestHandler.post.mock.calls.length).toBe(1);
+  });
+
+  it('should return the previous API rate limits', () => {
+    yaLifx.listLights();
+    yaLifx.apiLimits();
+
+    expect(requestHandler.getLimits.mock.calls.length).toBe(1);
   });
 });

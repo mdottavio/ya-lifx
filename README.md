@@ -1,5 +1,5 @@
 # :bulb: ya-lifx
-> REST client for the [Lifx's API](http://api.developer.lifx.com/); each method of ``ya-lifx`` return a promise which resolve with the API's response; 
+> REST client for the [Lifx's API](http://api.developer.lifx.com/); each method of ``ya-lifx`` return a promise which resolve with the API's response;
 
 [![Dev dependencies status](https://david-dm.org/mdottavio/ya-lifx.svg)](https://david-dm.org/mdottavio/ya-lifx#info=dependencies&view=table)
 
@@ -20,6 +20,8 @@ lifx.init('YOUR_TOKEN');
 lifx.listLights()
   .then(function(response){
     console.log(response);
+    console.log('API Limits ', lifx.apiLimits());
+
   })
   .fail(function(err){
     console.log('Error');
@@ -41,6 +43,7 @@ The available methods of the lib are:
 * [``breathe``](http://api.developer.lifx.com/docs/breathe-effect): Performs a breathe effect by slowly fading between the given colors.
 * [``pulse``](http://api.developer.lifx.com/docs/pulse-effect): Performs a pulse effect by quickly flashing between the given colors.
 * [``cycle``](http://api.developer.lifx.com/docs/cycle): Make the light(s) cycle to the next or previous state in a list of states.
+* `apiRateLimits`: Return the [Rate limit](https://api.developer.lifx.com/docs/rate-limits) from the previous call.
 
 #### Errors and Warnings
 Please referer to [Errors documentation](http://api.developer.lifx.com/docs/errors) for more information.  
