@@ -39,22 +39,31 @@ let requestHandler = function() {
 
       if (validateApiRateLimit()) {
         request(options, function(err, res, body) {
-          body = JSON.parse(body);
-          // update the apiRateLimit object
-          apiRateLimit = {
-            limit: parseInt(res.headers['x-ratelimit-limit']) || 0,
-            remaining: parseInt(res.headers['x-ratelimit-remaining']) || 0,
-            reset: parseInt(res.headers['x-ratelimit-reset']) || 0
-          };
+          try {
+            // sometimes API response with HTML
+            // https://github.com/mdottavio/ya-lifx/issues/7
+            body = JSON.parse(body);
+            // update the apiRateLimit object
+            apiRateLimit = {
+              limit: parseInt(res.headers['x-ratelimit-limit']) || 0,
+              remaining: parseInt(res.headers['x-ratelimit-remaining']) || 0,
+              reset: parseInt(res.headers['x-ratelimit-reset']) || 0
+            };
 
-          if (err) {
-            reject(err);
-          } else if (res.statusCode < 400) {
-            resolve(body);
-          } else {
+            if (err) {
+              reject(err);
+            } else if (res.statusCode < 400) {
+              resolve(body);
+            } else {
+              reject({
+                error: body.error,
+                warnings: body.warnings || {}
+              });
+            }
+          } catch (e) {
             reject({
-              error: body.error,
-              warnings: body.warnings || {}
+              error: 'API failed',
+              warnings: {}
             });
           }
         });
