@@ -23,7 +23,7 @@ lifx.listLights()
     console.log('API Limits ', lifx.apiLimits());
 
   })
-  .fail(function(err){
+  .catch(function(err){
     console.log('Error');
     console.log(err.error);
     console.log(err.warnings);
