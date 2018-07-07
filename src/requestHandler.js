@@ -1,79 +1,18 @@
 'use strict';
 
-var request = require('request');
+const fetch = require('node-fetch');
+const encoder = require('form-urlencoded').default;
 
-let requestHandler = function() {
+class RequestHandler {
 
-  let token = '';
+  constructor(token = '') {
+    this.baseUrl = 'https://api.lifx.com/v1/';
+    this.setToken(token);
+    this.apiRateLimit = null;
+  }
 
-  let baseUrl = 'https://api.lifx.com/v1/';
-
-  let apiRateLimit = null;
-
-  let validateApiRateLimit = () => {
-    return (apiRateLimit == null) || (apiRateLimit.remaining > 0);
-  };
-
-  /**
-   * Perform a request, return a promise
-   *
-   * @param  {String} endpoint
-   * @param  {String} method
-   * @param  {Object} data
-   * @return {Object} Promise
-   */
-  let doRequest = (endpoint, method, data) => {
-
-    return new Promise((resolve, reject) => {
-      data = data || {};
-      var options = {
-        uri: baseUrl + endpoint,
-        headers: {
-          'Content-Type': 'application/json',
-          Accept: 'application/json',
-          Authorization: 'Bearer ' + token,
-        },
-        method: method,
-        form: data
-      };
-
-      if (validateApiRateLimit()) {
-        request(options, function(err, res, body) {
-          try {
-            // sometimes API response with HTML
-            // https://github.com/mdottavio/ya-lifx/issues/7
-            body = JSON.parse(body);
-            // update the apiRateLimit object
-            apiRateLimit = {
-              limit: parseInt(res.headers['x-ratelimit-limit']) || 0,
-              remaining: parseInt(res.headers['x-ratelimit-remaining']) || 0,
-              reset: parseInt(res.headers['x-ratelimit-reset']) || 0
-            };
-
-            if (err) {
-              reject(err);
-            } else if (res.statusCode < 400) {
-              resolve(body);
-            } else {
-              reject({
-                error: body.error,
-                warnings: body.warnings || {}
-              });
-            }
-          } catch (e) {
-            reject({
-              error: 'API failed',
-              warnings: {}
-            });
-          }
-        });
-      } else {
-        reject({
-          error: 'User request limit reached',
-          warnings: {}
-        });
-      }
-    });
+  _validateApiRateLimit() {
+    return (this.apiRateLimit == null) || (this.apiRateLimit.remaining > 0);
   };
 
   /**
@@ -82,29 +21,95 @@ let requestHandler = function() {
    * Generate valid tokens on https://cloud.lifx.com/settings
    * @param {String} aToken
    */
-  let _setToken = function(aToken) {
-    token = aToken;
-    apiRateLimit = null;
+  setToken(aToken) {
+    this.token = aToken;
+    this.apiRateLimit = null;
   };
 
-  let _doGet = function(endpoint) {
-    return doRequest(endpoint, 'GET');
+  /**
+   * Perform a `GET` request on the give endpoint.
+   * @param  {String}  endpoint
+   * @return {Promise}
+   */
+  get(endpoint) {
+    return this.doRequest(endpoint, 'GET').then(res => res.json())
   };
 
-  let _doPost = function(endpoint, data) {
-    return doRequest(endpoint, 'POST', data);
+  /**
+   * Perform a `POST` request on the give endpoint with the given Object.
+   * @param  {String}  endpoint
+   * @param  {Object}  data
+   * @return {Promise}
+   */
+  post(endpoint, data) {
+    return this.doRequest(endpoint, 'POST', encoder(data), {'Content-Type': 'application/x-www-form-urlencoded'})
+    .then(res => res.json())
   };
 
-  let _doPut = function(endpoint, data) {
-    return doRequest(endpoint, 'PUT', data);
+  /**
+   * Perform a JSON encoded `POST` request on the give endpoint with the given Object.
+   * @param  {String}  endpoint
+   * @param  {Object}  data
+   * @return {Promise}
+   */
+  postJson(endpoint, data) {
+    return this.doRequest(endpoint, 'POST', JSON.stringify(data), {'Content-Type': 'application/json'})
+    .then(res => res.json())
   };
 
-  return {
-    setToken: _setToken,
-    get: _doGet,
-    post: _doPost,
-    put: _doPut,
-    getLimits: () => apiRateLimit
+  /**
+   * Perform a `PUT` request on the give endpoint with the given Object.
+   * @param  {String}  endpoint
+   * @param  {Object}  data
+   * @return {Promise}
+   */
+  put(endpoint, data) {
+    return this.doRequest(endpoint, 'PUT', encoder(data), {'Content-Type': 'application/x-www-form-urlencoded'})
+    .then(() => null);
   };
-};
-module.exports = requestHandler();
+
+  /**
+   * Return the latest limit data available.
+   * @return {Object}
+   */
+  getLimits() {
+    return this.apiRateLimit;
+  }
+
+  /**
+   * Perform a request to the given endpoint and update the API limit Object.
+   * @param  {String} endpoint
+   * @param  {String} method
+   * @param  {Object} data
+   * @return {Object} Promise
+   */
+  doRequest(endpoint, method, body = null, headers = {}) {
+    if (this._validateApiRateLimit()) {
+      const options = {
+        headers: {
+          'Authorization': `Bearer ${this.token}`,
+          ...headers,
+        },
+        method: method,
+        body,
+      };
+      return fetch( `${this.baseUrl}${endpoint}`, options)
+        .then((res) => {
+          // update the apiRateLimit object
+          this.apiRateLimit = {
+            limit: parseInt(res.headers.get('x-ratelimit-limit')) || 0,
+            remaining: parseInt(res.headers.get('x-ratelimit-remaining')) || 0,
+            reset: parseInt(res.headers.get('x-ratelimit-reset')) || 0
+          };
+          return res;
+        })
+    } else {
+      return Promise.reject({
+        error: 'User request limit reached',
+        warnings: {}
+      });
+    }
+  }
+}
+
+module.exports = RequestHandler;

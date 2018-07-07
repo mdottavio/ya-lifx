@@ -17,7 +17,9 @@
   "author": "dottavio@gmail.com",
   "license": "MIT",
   "dependencies": {
-    "request": "^2.72.0"
+    "form-urlencoded": "^3.0.0",
+    "node-fetch": "^2.1.2",
+    "request-debug": "^0.2.0"
   },
   "repository": {
     "type": "git",
@@ -27,10 +29,17 @@
     "jasmine-expect": "^2.0.2",
     "jest-cli": "^11.0.2"
   },
+  "engines" : {
+    "node" : "8"
+  },
   "jest": {
     "collectCoverage": true,
-    "testFileExtensions": ["js"],
-    "moduleFileExtensions": ["js"],
+    "testFileExtensions": [
+      "js"
+    ],
+    "moduleFileExtensions": [
+      "js"
+    ],
     "unmockedModulePathPatterns": [
       "<rootDir>/node_modules/"
     ]

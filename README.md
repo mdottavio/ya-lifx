@@ -14,14 +14,13 @@ npm install ya-lifx
 You'll need a valid Lifx's token to use the lib; generate it from https://cloud.lifx.com/settings
 
 ```javascript
-var lifx = require('ya-lifx');
+const Lifx = require('./ya-lifxClass.js');
 
-lifx.init('YOUR_TOKEN');
+const lifx = new Lifx(token);
 lifx.listLights()
   .then(function(response){
     console.log(response);
     console.log('API Limits ', lifx.apiLimits());
-
   })
   .catch(function(err){
     console.log('Error');

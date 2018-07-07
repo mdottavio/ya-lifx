@@ -1,16 +1,25 @@
-'use strict';
+const RequestHandler = require('./src/requestHandler');
+const endpoints = require('./src/endpoints');
 
-let requestHdlr = require('./src/requestHandler');
-let endpoints = require('./src/endpoints');
+class Lifx {
 
-let lifxAPI = function() {
+  /**
+   * Visit https://cloud.lifx.com/settings to generate your token.
+   * @param {String} aToken lifx's token
+   */
+  constructor(aToken) {
+    this.requestHdlr = new RequestHandler(aToken);
+    this.endpoints = endpoints;
+  }
 
-  let _init = function(aToken) {
-
-    requestHdlr.setToken(aToken);
-  };
-
-  let validateState = function(aState) {
+  /**
+   * Validate the given State Object based on:
+   * https://api.developer.lifx.com/v1/docs/set-state
+   *
+   * @param  {Object} [aState={}] The state Object to validate.
+   * @return {Object}             An Object with the validated properties.
+   */
+  _validateState(aState = {}) {
     let validState = {};
 
     if (aState.power === 'on' || aState.power === 'off') {
@@ -31,10 +40,26 @@ let lifxAPI = function() {
       validState.duration = aState.duration;
     }
 
-    return validState;
-  };
+    if (typeof aState.infrared === 'number' &&
+      (aState.infrared > 0 && aState.infrared < 1)) {
+      validState.infrared = aState.infrared;
+    }
 
-  let validateEffectParams = function(params) {
+    if (aState.fast === true || aState.fast === false) {
+      validState.fast = aState.fast;
+    }
+
+    return validState;
+  }
+
+  /**
+   * Validate the given Effect Object based on:
+   * https://api.developer.lifx.com/docs/breathe-effect
+   *
+   * @param  {Object} [params={}] The effect Object to validate.
+   * @return {Object}             An Object with the validated properties.
+   */
+  _validateEffectParams(params = {}) {
     let validParams = {};
 
     if (typeof params.color === 'string' && params.color !== '') {
@@ -67,21 +92,18 @@ let lifxAPI = function() {
     }
 
     return params;
-  };
+  }
 
   /**
    * Gets lights belonging to the authenticated account.
    *
    * Doc: http://api.developer.lifx.com/docs/list-lights
-   * @param {String} aSelector The selector to limit which lights are controlled.
+   * @param {String} selector The selector to limit which lights are controlled.
    *                           all by default
    * @return {Object}
    */
-  let _listLights = function(aSelector) {
-
-    aSelector = aSelector || 'all';
-
-    return requestHdlr.get(endpoints.get.lights({ selector: aSelector }));
+  listLights(selector = 'all') {
+    return this.requestHdlr.get(this.endpoints.get.lights({ selector }));
   };
 
   /**
@@ -90,30 +112,28 @@ let lifxAPI = function() {
    * Doc: http://api.developer.lifx.com/docs/list-scenes
    * @return {Object}
    */
-  let _listScenes = function() {
-
-    return requestHdlr.get(endpoints.get.scenes());
-  };
+  listScenes() {
+    return this.requestHdlr.get(this.endpoints.get.scenes());
+  }
 
   /**
    * Validate a user's color string and return the hue, saturation
    * brightness and kelvin values that the API will interpret as.
    *
    * Doc: http://api.developer.lifx.com/docs/validate-color
-   * @param  {String} aColor Color string you'd like to validate
+   * @param  {String} color Color string you'd like to validate
    * @return {Object}
    */
-  let _validateColor = function(aColor) {
-
-    return requestHdlr.get(endpoints.get.color({color: aColor}));
+  validateColor(color) {
+    return this.requestHdlr.get(this.endpoints.get.color({ color }));
   };
 
   /**
    * Sets the state of the lights within the selector.
    *
    * Doc: http://api.developer.lifx.com/docs/set-state
-   * @param  {String} aSelector The selector to limit which lights are controlled.all by default
-   * @param  {Object} aState    properties to change:
+   * @param  {String} selector The selector to limit which lights are controlled.all by default
+   * @param  {Object} state    properties to change:
    *  @property {String} power      The power state you want to set on the selector. on or off
    *  @property {String} color      The color to set the light to.
    *  @property {Double} brightness The brightness level from 0.0 to 1.0. Overrides any  brightness
@@ -122,46 +142,40 @@ let lifxAPI = function() {
    *                                Range: 0.0 – 3155760000.0 (100 years)
    * @return {Object}
    */
-  let _setState = function(aSelector, aState) {
-    aSelector = aSelector || 'all';
-
-    aState = validateState(aState);
-
-    return requestHdlr.put(endpoints.put.lights({selector: aSelector}), aState);
+  setState(selector, state = 'all') {
+    state = this._validateState(state);
+    return this.requestHdlr.put(this.endpoints.put.lights({ selector }), state);
   };
 
   /**
    * Activates a scene from the users account
    *
    * Doc: http://api.developer.lifx.com/docs/activate-scene
-   * @param  {String} aScene   The UUID for the scene you wish to activate
-   * @param  {Double} theDuration The time in seconds to spend performing the scene transition.
+   * @param  {String} sceneId   The UUID for the scene you wish to activate
+   * @param  {Double} duration The time in seconds to spend performing the scene transition.
    * @return {Object}
    */
-  let _activateScene = function(aScene, theDuration) {
-
-    return requestHdlr.put(endpoints.put.scenes({sceneId: aScene}), {duration: theDuration});
+  activateScene(sceneId, duration) {
+    return this.requestHdlr.put(this.endpoints.put.scenes({ sceneId }), { duration });
   };
 
   /**
    * Turn off lights if they are on, or turn them on if they are off.
    *
    * Doc: http://api.developer.lifx.com/docs/toggle-power
-   * @param  {String} aSelector The selector to limit which lights are toggled.
-   * @param  {Double} theDuration The time is seconds to spend perfoming the power toggle.
+   * @param  {String} delector The selector to limit which lights are toggled.
+   * @param  {Double} duration The time is seconds to spend perfoming the power toggle.
    * @return {Object}
    */
-  let _toggle = function(aSelector, theDuration) {
-    aSelector = aSelector || 'all';
-
-    return requestHdlr.post(endpoints.post.lights.toggle({selector: aSelector}), {duration: theDuration});
+  toggle(selector = 'all', duration = 1.0) {
+    return this.requestHdlr.post(this.endpoints.post.lights.toggle({ selector }), { duration });
   };
 
   /**
    * Performs a breathe effect by slowly fading between the given colors.
    *
    * Doc: http://api.developer.lifx.com/docs/breathe-effect
-   * @param  {String} aSelector The selector to limit which lights are controlled. all by default
+   * @param  {String} selector  The selector to limit which lights are controlled. all by default
    * @param  {Object} params    properties to change:
    *  @property {String} color      The color to use for the breathe effect.
    *  @property {String} from_color The color to start the effect from.
@@ -173,19 +187,17 @@ let lifxAPI = function() {
    *  @property {String} peak       Defines where in a period the target color is at its maximum.
    * @return {Object}
    */
-  let _breathe = function(aSelector, params) {
-    aSelector = aSelector || 'all';
+  breathe(selector = 'all', params = {}) {
+    params = this._validateEffectParams(params);
 
-    params = validateEffectParams(params);
-
-    return requestHdlr.post(endpoints.post.lights.effects.breathe({selector: aSelector}), params);
+    return this.requestHdlr.post(this.endpoints.post.lights.effects.breathe({ selector }), params);
   };
 
   /**
    * Performs a pulse effect by quickly flashing between the given colors.
    *
    * Doc: http://api.developer.lifx.com/docs/pulse-effect
-   * @param  {String} aSelector The selector to limit which lights are controlled. all by default
+   * @param  {String} selector  The selector to limit which lights are controlled. all by default
    * @param  {Object} params    properties to change:
    *  @property {String} color      The color to use for the breathe effect.
    *  @property {String} from_color The color to start the effect from.
@@ -197,48 +209,41 @@ let lifxAPI = function() {
    *  @property {String} peak       Defines where in a period the target color is at its maximum.
    * @return {Object}
    */
-  let _pulse = function(aSelector, params) {
-    aSelector = aSelector || 'all';
+  pulse(selector = 'all', params) {
+    params = this._validateEffectParams(params);
 
-    params = validateEffectParams(params);
-
-    return requestHdlr.post(endpoints.post.lights.effects.pulse({selector: aSelector}), params);
+    return this.requestHdlr.post(this.endpoints.post.lights.effects.pulse({ selector }), params);
   };
 
   /**
    * Make the light(s) cycle to the next or previous state in a list of states.
    *
    * Doc: http://api.developer.lifx.com/docs/cycle
-   * @param  {String} aSelector    The selector to limit which lights are controlled. all by default
-   * @param  {Array}  theStates    Array of state hashes as per Set State. Must have 2 to 5 entries
-   * @param  {Object} theDafaults  Default values to use when not specified in each states[] object.
-   * @param  {String} theDirection Direction in which to cycle through the list.
+   * @param  {String} selector    The selector to limit which lights are controlled. all by default
+   * @param  {Array}  states    Array of state hashes as per Set State. Must have 2 to 5 entries
+   * @param  {Object} defaults  Default values to use when not specified in each states[] object.
+   * @param  {String} direction Direction in which to cycle through the list.
    *                               Can be forward or backward
    * @return {Object}
    */
-  let _cycle = function(aSelector, theStates, theDafaults, theDirection) {
-    theStates = Array.isArray(theStates) ? theStates : [];
-
-    return requestHdlr.post(endpoints.post.lights.cycle({selector: aSelector}), {
-      states: theStates,
-      defaults: theDafaults,
-      direction: theDirection
+  cycle(selector = 'all', states = [], defaults = {}, direction = 'forward') {
+    return this.requestHdlr.postJson(this.endpoints.post.lights.cycle({selector}), {
+      states,
+      defaults,
+      direction,
     });
   };
 
-  return {
-    init: _init,
-    listLights: _listLights,
-    listScenes: _listScenes,
-    validateColor: _validateColor,
-    setState: _setState,
-    activateScene: _activateScene,
-    toggle: _toggle,
-    breathe: _breathe,
-    pulse: _pulse,
-    cycle: _cycle,
-    apiLimits: requestHdlr.getLimits
+  /**
+   * Return the latest API limit available on the client.
+   * @return {Object}
+   *  @property {Number} limit
+   *  @property {Number} remaining
+   *  @property {Number} reset
+   */
+  apiLimits() {
+    return this.requestHdlr.getLimits();
   };
-};
+}
 
-module.exports = lifxAPI();
+module.exports = Lifx;
